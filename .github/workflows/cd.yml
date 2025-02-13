@@ -8,11 +8,24 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 1
+
     steps:
+      # Step 1: Check out the code
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Step 2: Set up SSH
+      - name: Add SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H 18.119.104.183 >> ~/.ssh/known_hosts
+
+      # Step 3: Deploy application
       - name: Deploy to EC2
         run: |
-          ssh -o StrictHostKeyChecking=no -i /path/to/your-key.pem ubuntu@<EC2-PUBLIC-IP> <<EOF
+          ssh -i ~/.ssh/id_rsa ubuntu@18.119.104.183 <<EOF
             cd /home/ubuntu/fastapi-book-project
             git pull
             sudo systemctl restart fastapi
